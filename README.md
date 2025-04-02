@@ -89,7 +89,7 @@ The application uses configuration files located in the `config` directory:
 - `development.yaml` - Used in development environment
 - `production.yaml` - Used in production environment
 
-You can specify which configuration to use with the environment variable:
+You can specify which configuration to use with the cli options:
 ```bash
 cargo run -- --env <OPTIONS>
 ```
