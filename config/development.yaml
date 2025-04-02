@@ -1,0 +1,13 @@
+
+server:
+  protocol: http
+  host: localhost
+  port: 5150
+
+logger:
+  level: "debug"
+  format: "pretty"
+  directives:
+    - "tracing_subscriber"
+    - "axum"
+    - "tasks_authenticated"
