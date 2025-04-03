@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::{
     Json, Router, debug_handler,
     http::StatusCode,
@@ -14,7 +16,7 @@ use utoipa_redoc::{Redoc, Servable};
 use utoipa_scalar::{Scalar, Servable as ScalarServable};
 use utoipa_swagger_ui::SwaggerUi;
 
-use crate::middlewares::trace;
+use crate::{context::AppState, middlewares::trace};
 
 #[derive(OpenApi)]
 #[openapi(
@@ -49,7 +51,7 @@ async fn error() -> Result<Response, impl IntoResponse> {
     ))
 }
 
-pub fn router() -> Router {
+pub fn router(ctx: AppState) -> Router {
     let app_router = OpenApiRouter::new()
         .routes(routes!(health))
         .routes(routes!(error))
@@ -69,7 +71,8 @@ pub fn router() -> Router {
         .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", open_api.clone()))
         .merge(Redoc::with_url("/redoc", open_api.clone()))
         .merge(RapiDoc::new("/api-docs/openapi.json").path("/rapidoc"))
-        .merge(Scalar::with_url("/", open_api));
+        .merge(Scalar::with_url("/", open_api))
+        .with_state(Arc::new(ctx));
 
     Router::new().merge(router)
 }

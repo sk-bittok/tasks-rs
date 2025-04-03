@@ -1,6 +1,8 @@
+pub mod db;
 pub mod logger;
+pub mod jwt;
 
-pub use self::logger::Telemetry;
+pub use self::{db::DatabaseConfig, logger::Telemetry, jwt::{AuthConfig, RsaJwtConfig}};
 
 use serde::Deserialize;
 
@@ -39,7 +41,7 @@ impl From<String> for AppEnvironment {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct ServerConfig {
     pub(crate) protocol: String,
     pub(crate) host: String,
@@ -59,10 +61,12 @@ impl ServerConfig {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct AppConfig {
     pub(crate) server: ServerConfig,
-    pub(super) logger: Telemetry,
+    pub(crate) logger: Telemetry,
+    pub(crate) db: DatabaseConfig,
+    pub(crate) auth: AuthConfig
 }
 
 impl AppConfig {
@@ -95,5 +99,15 @@ impl AppConfig {
     #[must_use]
     pub const fn logger(&self) -> &Telemetry {
         &self.logger
+    }
+
+    #[must_use]
+    pub const fn db(&self) -> &DatabaseConfig {
+        &self.db
+    }
+
+    #[must_use]
+    pub const fn auth(&self) -> &AuthConfig {
+        &self.auth
     }
 }

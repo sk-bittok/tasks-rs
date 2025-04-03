@@ -2,3 +2,10 @@
 
 ## Production
 production.yaml
+
+## Environmental
+*.env
+
+## Private keys
+*.pem
+*.pem.pub

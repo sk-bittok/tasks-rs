@@ -11,3 +11,17 @@ logger:
     - "tracing_subscriber"
     - "axum"
     - "tasks_authenticated"
+    - "sqlx"
+
+db:
+  url: postgresql://admin:Password@localhost:5432/tasks-rs_app
+  connect_timeout: 5 # Seconds
+  idle_timeout: 5 # Specify in seconds
+  max_connections: 10
+  min_connections: 1
+
+auth:
+  access:
+    private_key: "security/dev/keys/access_key.pem"
+    public_key: "security/dev/keys/access_key_pub.pem"
+    expiration: 3600 # Seconds

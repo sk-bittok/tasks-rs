@@ -11,10 +11,14 @@ impl Error {
         tracing::error!("An error occurred: {:?}", &self);
         let (status, message) = match self {
             Self::Axum(_)
+            | Self::ColorEyre(_)
             | Self::Config(_)
             | Self::Env(_)
             | Self::IO(_)
+            | Self::JsonWebToken(_)
             | Self::Parse(_)
+            | Self::Sqlx(_)
+            | Self::SqlxMigrate(_)
             | Self::TryInit(_) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Something went wrong on our end.",
