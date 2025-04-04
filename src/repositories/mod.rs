@@ -1,3 +1,4 @@
+pub mod tasks;
 pub mod users;
 
 use axum::{

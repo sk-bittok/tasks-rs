@@ -1,22 +1,38 @@
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
+use validator::Validate;
 
 use crate::repositories::users::User;
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, ToSchema, Clone, Validate)]
 pub struct RegisterUser {
+    #[validate(email(message = "Invalid email"))]
     pub email: String,
+    #[validate(length(
+        min = 5,
+        max = 50,
+        message = "Username must be between 5 to 50 characters long"
+    ))]
     pub username: String,
+    #[validate(length(
+        min = 8,
+        max = 48,
+        message = "Password must be between 8 to 48 characters long"
+    ))]
     pub password: String,
+    #[validate(must_match(other = "password"))]
     pub confirm_password: String,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, ToSchema, Clone, Validate)]
 pub struct LoginUser {
+    #[validate(email(message = "Invalid email"))]
     pub email: String,
+    #[validate(length(min = 1, message = "Password is required"))]
     pub password: String,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, ToSchema)]
 pub struct AuthResponse {
     pub message: String,
 }
@@ -29,7 +45,7 @@ impl AuthResponse {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, ToSchema)]
 pub struct LoginResponse {
     pub token: String,
     pub username: String,
@@ -50,6 +66,5 @@ impl LoginResponse {
 pub struct TokenClaims {
     pub sub: String,
     pub iat: usize,
-    pub exp: usize
+    pub exp: usize,
 }
-

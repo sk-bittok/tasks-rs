@@ -5,6 +5,8 @@ use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
 };
+use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
 impl Error {
     pub fn response(&self) -> Response {
@@ -23,6 +25,8 @@ impl Error {
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Something went wrong on our end.",
             ),
+            Self::Validation(e) => (StatusCode::UNPROCESSABLE_ENTITY, e.as_str()),
+            Self::Model(e) => return e.response(),
         };
 
         let body = serde_json::json!({
@@ -37,4 +41,9 @@ impl IntoResponse for Error {
     fn into_response(self) -> Response {
         self.response()
     }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, ToSchema)]
+pub struct ErrorResponse {
+    pub message: String,
 }

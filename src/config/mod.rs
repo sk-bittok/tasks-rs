@@ -1,8 +1,12 @@
 pub mod db;
-pub mod logger;
 pub mod jwt;
+pub mod logger;
 
-pub use self::{db::DatabaseConfig, logger::Telemetry, jwt::{AuthConfig, RsaJwtConfig}};
+pub use self::{
+    db::DatabaseConfig,
+    jwt::{AuthConfig, RsaJwtConfig},
+    logger::Telemetry,
+};
 
 use serde::Deserialize;
 
@@ -66,7 +70,7 @@ pub struct AppConfig {
     pub(crate) server: ServerConfig,
     pub(crate) logger: Telemetry,
     pub(crate) db: DatabaseConfig,
-    pub(crate) auth: AuthConfig
+    pub(crate) auth: AuthConfig,
 }
 
 impl AppConfig {

@@ -43,7 +43,7 @@ impl JwtState {
     ) -> Result<Self, Error> {
         let private_key = std::fs::read_to_string(private_key_path)?;
         let encoding_key = EncodingKey::from_rsa_pem(private_key.as_bytes())?;
-        
+
         let public_key = std::fs::read_to_string(public_key_path)?;
         let decoding_key = DecodingKey::from_rsa_pem(public_key.as_bytes())?;
 

@@ -1,6 +1,9 @@
 use serial_test::serial;
 use tasks_authenticated::{
-    context::JwtState, models::auth::{LoginUser, RegisterUser}, repositories::users::User, AppConfig, AppEnvironment
+    AppConfig, AppEnvironment,
+    context::JwtState,
+    models::auth::{LoginUser, RegisterUser},
+    repositories::users::User,
 };
 
 async fn seed_data(config: &AppConfig) {
@@ -83,7 +86,6 @@ async fn can_handle_redundant_username() {
     assert!(result.is_err());
 }
 
-
 #[tokio::test]
 #[serial]
 async fn can_login_user() {
@@ -95,8 +97,13 @@ async fn can_login_user() {
         password: "Password".into(),
     };
 
-    let auth = JwtState::new(&config.auth().access.private_key, &config.auth().access.public_key, config.auth().access.expiration).unwrap();
+    let auth = JwtState::new(
+        &config.auth().access.private_key,
+        &config.auth().access.public_key,
+        config.auth().access.expiration,
+    )
+    .unwrap();
     let result = User::login_user(&config.db().connection_pool().unwrap(), &params, &auth).await;
-    
+
     assert!(result.is_ok());
 }

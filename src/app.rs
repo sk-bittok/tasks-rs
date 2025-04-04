@@ -1,6 +1,6 @@
 use std::io::IsTerminal;
 
-use crate::{context::AppState, AppConfig, AppEnvironment, Error};
+use crate::{AppConfig, AppEnvironment, Error, context::AppState};
 
 use clap::Parser;
 use dotenv::dotenv;
@@ -42,7 +42,7 @@ impl App {
         config.db().migrate().await?;
 
         let listener: TcpListener = TcpListener::bind(config.server.address()).await?;
-        let router = crate::router::router(AppState::new(&config)?);
+        let router = crate::router::router(&AppState::new(&config)?);
 
         println!("Running on: {}", config.server());
         axum::serve(listener, router).await.map_err(Into::into)

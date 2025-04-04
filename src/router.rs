@@ -5,10 +5,13 @@ use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
 };
-use serde_json::json;
 use tower_http::trace::TraceLayer;
 
 use utoipa::OpenApi;
+use utoipa::{
+    Modify,
+    openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme},
+};
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_axum::routes;
 use utoipa_rapidoc::RapiDoc;
@@ -16,13 +19,35 @@ use utoipa_redoc::{Redoc, Servable};
 use utoipa_scalar::{Scalar, Servable as ScalarServable};
 use utoipa_swagger_ui::SwaggerUi;
 
-use crate::{context::AppState, middlewares::trace};
+use crate::{
+    context::AppState,
+    controllers::{auth, tasks},
+    middlewares::{auth::JwtAuthLayer, trace},
+};
 
 #[derive(OpenApi)]
 #[openapi(
-    tags((name = "Health Check", description = "Health check handler API"))
+    tags((name = "Health Check", description = "Health check handler API")),
+    modifiers(&SecurityAddOn)
 )]
 struct ApiDoc;
+
+struct SecurityAddOn;
+
+impl Modify for SecurityAddOn {
+    fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
+        let components = openapi.components.as_mut().unwrap();
+        components.add_security_scheme(
+            "token",
+            SecurityScheme::Http(
+                HttpBuilder::new()
+                    .scheme(HttpAuthScheme::Bearer)
+                    .bearer_format("JWT")
+                    .build(),
+            ),
+        );
+    }
+}
 
 #[derive(Debug, serde::Serialize, Clone, utoipa::ToSchema)]
 pub struct GenericResponse {
@@ -39,22 +64,15 @@ async fn health() -> Response {
     (StatusCode::OK, Json(message)).into_response()
 }
 
-#[debug_handler]
-#[utoipa::path(get, path = "/error", responses((status = INTERNAL_SERVER_ERROR, body = GenericResponse)), tag = "Error" )]
-async fn error() -> Result<Response, impl IntoResponse> {
-    let _message = json!({
-        "message": "This endpoint should return an error"
-    });
-
-    Err(crate::Error::IO(
-        std::io::ErrorKind::PermissionDenied.into(),
-    ))
-}
-
-pub fn router(ctx: AppState) -> Router {
+pub fn router(ctx: &AppState) -> Router {
     let app_router = OpenApiRouter::new()
+        .with_state(Arc::new(ctx.clone()))
+        .nest("/auth", auth::auth_routes(&ctx))
+        .nest(
+            "/tasks",
+            tasks::task_routes(&ctx).layer(JwtAuthLayer::new(&ctx)),
+        )
         .routes(routes!(health))
-        .routes(routes!(error))
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(trace::make_span_with)
@@ -71,8 +89,7 @@ pub fn router(ctx: AppState) -> Router {
         .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", open_api.clone()))
         .merge(Redoc::with_url("/redoc", open_api.clone()))
         .merge(RapiDoc::new("/api-docs/openapi.json").path("/rapidoc"))
-        .merge(Scalar::with_url("/", open_api))
-        .with_state(Arc::new(ctx));
+        .merge(Scalar::with_url("/", open_api));
 
     Router::new().merge(router)
 }
