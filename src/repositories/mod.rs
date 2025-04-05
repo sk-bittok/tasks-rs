@@ -14,6 +14,8 @@ pub enum ModelError {
     Argon2(argon2::Error),
     #[error("{0}")]
     ArgonPasswordHash(argon2::password_hash::Error),
+    #[error("{0}")]
+    Database(String),
     #[error("Account with email already exists")]
     EmailExists,
     #[error("Entity not in the database")]
@@ -36,7 +38,11 @@ impl ModelError {
                 "Email already registered to an account",
             ),
             Self::EntityNotFound => (StatusCode::NOT_FOUND, "Entity not found"),
-            Self::Sqlx(_) | Self::Argon2(_) | Self::ArgonPasswordHash(_) | Self::Jwt(_) => (
+            Self::Sqlx(_)
+            | Self::Argon2(_)
+            | Self::ArgonPasswordHash(_)
+            | Self::Jwt(_)
+            | Self::Database(_) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Something went wrong on our end",
             ),

@@ -7,14 +7,33 @@ use axum::{RequestPartsExt, body::Body, extract::Request, response::Response};
 use axum_extra::{
     TypedHeader,
     headers::{Authorization, authorization::Bearer},
+    typed_header::TypedHeaderRejectionReason,
 };
 use futures_util::future::BoxFuture;
 use jsonwebtoken::{Algorithm, Validation};
 use tower::{Layer, Service};
+use uuid::Uuid;
 
 use crate::{AppState, models::auth::TokenClaims};
 
 use super::AuthError;
+
+#[derive(Debug, Clone)]
+pub struct AuthClaims {
+    pub pid: Uuid,
+}
+
+impl AuthClaims {
+    #[must_use]
+    pub fn new(pid: Uuid) -> Self {
+        Self { pid }
+    }
+
+    #[must_use]
+    pub fn pid(&self) -> Uuid {
+        self.pid
+    }
+}
 
 #[derive(Clone)]
 pub struct JwtAuthLayer {
@@ -74,7 +93,16 @@ where
                     Ok(token) => token,
                     Err(e) => {
                         tracing::error!("Typed Header Auth error: {:?}", e);
-                        return Ok(AuthError::InvalidToken.response());
+                        match e.reason() {
+                            TypedHeaderRejectionReason::Missing => {
+                                return Ok(AuthError::MissingCredentials.response());
+                            }
+                            TypedHeaderRejectionReason::Error(e) => {
+                                tracing::error!("Error -> {:?}", e);
+                                return Ok(AuthError::WrongCredentials.response());
+                            }
+                            _ => return Ok(AuthError::WrongCredentials.response()),
+                        }
                     }
                 };
 
@@ -90,8 +118,14 @@ where
                 }
             };
 
+            let pid = match Uuid::parse_str(token_data.claims.sub.as_str()) {
+                Ok(pd) => pd,
+                Err(_e) => return Ok(AuthError::InvalidToken.response()),
+            };
+
             let mut req = Request::from_parts(parts, body);
             req.extensions_mut().insert(token_data.claims);
+            req.extensions_mut().insert(AuthClaims::new(pid));
             inner.call(req).await
         })
     }

@@ -15,6 +15,17 @@ pub struct NewTask {
     pub done: bool,
 }
 
+#[derive(Debug, Deserialize, Clone, ToSchema, Validate)]
+pub struct UpdateTask {
+    #[validate(length(
+        min = 5,
+        max = 255,
+        message = "Title must be between 5 to 255 characters"
+    ))]
+    pub title: Option<String>,
+    pub done: bool,
+}
+
 #[derive(Debug, Deserialize, Clone, ToSchema, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TaskResponse {

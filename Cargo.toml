@@ -2,6 +2,7 @@
 name = "tasks-authenticated"
 version = "0.1.0"
 edition = "2024"
+authors = ["Simon Bittok <bittokks@gmail.com>"]
 
 [[bin]]
 path = "src/bin/main.rs"

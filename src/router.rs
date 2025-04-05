@@ -7,13 +7,11 @@ use axum::{
 };
 use tower_http::trace::TraceLayer;
 
-use utoipa::OpenApi;
 use utoipa::{
-    Modify,
+    Modify, OpenApi,
     openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme},
 };
-use utoipa_axum::router::OpenApiRouter;
-use utoipa_axum::routes;
+use utoipa_axum::{router::OpenApiRouter, routes};
 use utoipa_rapidoc::RapiDoc;
 use utoipa_redoc::{Redoc, Servable};
 use utoipa_scalar::{Scalar, Servable as ScalarServable};
@@ -27,7 +25,7 @@ use crate::{
 
 #[derive(OpenApi)]
 #[openapi(
-    tags((name = "Health Check", description = "Health check handler API")),
+    tags((name = "Tasks API", description = "Web service that handles and manages tasks.")),
     modifiers(&SecurityAddOn)
 )]
 struct ApiDoc;
@@ -65,7 +63,7 @@ async fn health() -> Response {
 }
 
 pub fn router(ctx: &AppState) -> Router {
-    let app_router = OpenApiRouter::new()
+    let app_router: OpenApiRouter = OpenApiRouter::new()
         .with_state(Arc::new(ctx.clone()))
         .nest("/auth", auth::auth_routes(&ctx))
         .nest(
@@ -85,7 +83,7 @@ pub fn router(ctx: &AppState) -> Router {
         .nest("/api", app_router)
         .split_for_parts();
 
-    let router = router
+    let router: Router = router
         .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", open_api.clone()))
         .merge(Redoc::with_url("/redoc", open_api.clone()))
         .merge(RapiDoc::new("/api-docs/openapi.json").path("/rapidoc"))

@@ -78,7 +78,7 @@ pub struct Telemetry {
 
 impl Telemetry {
     pub fn setup(&self) -> Result<(), crate::Error> {
-        let filter_layer = self.env_filter_layer()?;
+        let filter_layer: EnvFilter = self.env_filter_layer()?;
         let registry = tracing_subscriber::registry()
             .with(filter_layer)
             .with(tracing_error::ErrorLayer::default());
@@ -94,7 +94,7 @@ impl Telemetry {
     }
 
     pub fn env_filter_layer(&self) -> Result<EnvFilter, crate::Error> {
-        let mut filter_layer = match EnvFilter::try_from_default_env() {
+        let mut filter_layer: EnvFilter = match EnvFilter::try_from_default_env() {
             Ok(env_filter) => env_filter,
             Err(e) => {
                 if let Some(err) = e.source() {
@@ -115,7 +115,7 @@ impl Telemetry {
             }
         };
 
-        let parsed_directives = self.directives()?;
+        let parsed_directives: Vec<Directive> = self.directives()?;
 
         for parsed_directive in parsed_directives {
             filter_layer = filter_layer.add_directive(parsed_directive);
@@ -128,7 +128,7 @@ impl Telemetry {
         self.directives
             .iter()
             .map(|directive| -> Result<Directive, crate::Error> {
-                let directive_str = format!("{}={}", directive, self.level);
+                let directive_str: String = format!("{}={}", directive, self.level);
                 Ok(Directive::from_str(&directive_str)?)
             })
             .collect()
