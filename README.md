@@ -5,6 +5,7 @@ A robust backend service for task management built with Rust and the Axum web fr
 ## Overview
 
 Tasks Authenticated is a RESTful API service that allows users to manage tasks with authentication and authorization using JWT. The service is built with performance and security in mind, leveraging Rust's safety guarantees and the Axum framework's modern async approach.
+Screenshots of the application running on Scalar, Swagger-UI, Redoc and Rapidoc OpenAPI can be found in assets folder.
 
 ## Features
 

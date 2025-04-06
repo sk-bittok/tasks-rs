@@ -2,10 +2,13 @@ use std::sync::Arc;
 
 use axum::{
     Json,
+    body::Body,
     extract::State,
-    http::StatusCode,
+    http::{StatusCode, header::SET_COOKIE},
     response::{IntoResponse, Response},
 };
+use axum_extra::extract::cookie::{Cookie, SameSite};
+use serde_json::json;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
@@ -71,7 +74,7 @@ async fn register(
     path = "/login",
     request_body(content=LoginUser, content_type="application/json", description="Login data"),
     responses(
-        (status=200, description="User logged-in succesfully", body=LoginResponse),
+        (status=200, description="User logged-in succesfully", body=LoginResponse, content_type = "application/json"),
         (status=422, description="Validation error on request body", body=ErrorResponse),
         (status=401, description="Email and password did not match", body=ErrorResponse),
         (status=500, description="Internal server error", body=ErrorResponse)
@@ -86,7 +89,20 @@ async fn login(
 
     let user = User::login_user(&ctx.db, dto, &ctx.jwt).await?;
 
-    Ok((StatusCode::OK, Json(user)).into_response())
+    let access_cookie = Cookie::build(("accessToken", &user.token))
+        .path("/")
+        .max_age(time::Duration::seconds(ctx.jwt.max_age as i64))
+        .same_site(SameSite::Lax)
+        .http_only(true);
+
+    let response = Response::builder()
+        .status(StatusCode::OK)
+        .header("Authorization", format!("Bearer {}", &user.token))
+        .header(SET_COOKIE, access_cookie.to_string())
+        .header("Content-Type", "application/json")
+        .body(Body::new(json!(user).to_string()))?;
+
+    Ok(response)
 }
 
 pub fn auth_routes(ctx: &AppState) -> OpenApiRouter {

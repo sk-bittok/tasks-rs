@@ -13,6 +13,7 @@ impl Error {
         tracing::error!("An error occurred: {:?}", &self);
         let (status, message) = match self {
             Self::Axum(_)
+            | Self::AxumHttp(_)
             | Self::ColorEyre(_)
             | Self::Config(_)
             | Self::Env(_)

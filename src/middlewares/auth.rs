@@ -10,7 +10,7 @@ use axum_extra::{
     typed_header::TypedHeaderRejectionReason,
 };
 use futures_util::future::BoxFuture;
-use jsonwebtoken::{Algorithm, Validation};
+use jsonwebtoken::{Algorithm, Validation, errors::ErrorKind};
 use tower::{Layer, Service};
 use uuid::Uuid;
 
@@ -97,11 +97,10 @@ where
                             TypedHeaderRejectionReason::Missing => {
                                 return Ok(AuthError::MissingCredentials.response());
                             }
-                            TypedHeaderRejectionReason::Error(e) => {
-                                tracing::error!("Error -> {:?}", e);
+                            TypedHeaderRejectionReason::Error(_e) => {
                                 return Ok(AuthError::WrongCredentials.response());
                             }
-                            _ => return Ok(AuthError::WrongCredentials.response()),
+                            _ => return Ok(AuthError::Other(e.to_string()).response()),
                         }
                     }
                 };
@@ -112,10 +111,27 @@ where
                 &Validation::new(Algorithm::RS256),
             ) {
                 Ok(claims) => claims,
-                Err(e) => {
-                    tracing::error!("JWT Auth error: {e}");
-                    return Ok(AuthError::InvalidToken.response());
-                }
+                Err(e) => match e.kind() {
+                    ErrorKind::InvalidToken
+                    | ErrorKind::InvalidSignature
+                    | ErrorKind::InvalidIssuer
+                    | ErrorKind::InvalidAudience
+                    | ErrorKind::InvalidSubject => {
+                        return Ok(AuthError::InvalidToken.response());
+                    }
+                    ErrorKind::ExpiredSignature => {
+                        return Ok(AuthError::ExpiredToken(
+                            "Session has expired, please log in again".into(),
+                        )
+                        .response());
+                    }
+                    ErrorKind::ImmatureSignature => {
+                        return Ok(
+                            AuthError::ImmatureToken("Token cannot be used yet".into()).response()
+                        );
+                    }
+                    _ => return Ok(AuthError::JsonWebToken(e.into_kind()).response()),
+                },
             };
 
             let pid = match Uuid::parse_str(token_data.claims.sub.as_str()) {

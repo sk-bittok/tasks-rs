@@ -7,7 +7,6 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use utoipa_axum::{router::OpenApiRouter, routes};
-use uuid::Uuid;
 
 use crate::{
     AppState, Result,
@@ -15,7 +14,6 @@ use crate::{
     middlewares::auth::AuthClaims,
     models::{
         Validator,
-        auth::TokenClaims,
         tasks::{NewTask, TaskResponse, UpdateTask},
     },
     repositories::tasks::Task,
@@ -35,19 +33,20 @@ const TASK_TAG: &str = "Tasks";
     request_body(content = NewTask, content_type = "application/json", description = "Data to create a new task"),
     responses(
         (status = 201, body = TaskResponse, description = "Successful task creation"),
-        (status = 401, body = ErrorResponse, description = "Invalid authorisation token"),
+        (status = 401, body = ErrorResponse, description = "Authentication failure"),
+        (status = 403, body = ErrorResponse, description = "Authorisation failure"),
         (status = 500, body = ErrorResponse, description = "Internal server errors")
     )
 )]
 async fn add(
     State(ctx): State<Arc<AppState>>,
-    Extension(auth): Extension<TokenClaims>,
+    Extension(auth): Extension<AuthClaims>,
     Json(params): Json<NewTask>,
 ) -> Result<Response> {
     let validator = Validator::new(params);
     let dto = validator.validate()?;
 
-    let task = Task::create_task(&ctx.db, dto, Uuid::parse_str(&auth.sub).unwrap()).await?;
+    let task = Task::create_task(&ctx.db, dto, auth.pid()).await?;
 
     Ok((StatusCode::CREATED, Json(TaskResponse::from(task))).into_response())
 }
@@ -63,15 +62,16 @@ async fn add(
     security(("token" = [])),
     responses(
         (status = 200, body = Vec<TaskResponse>, description = "Successful tasks retrieval"),
-        (status = 401, body = ErrorResponse, description = "Invalid authorisation token"),
+        (status = 401, body = ErrorResponse, description = "Authentication failure"),
+        (status = 403, body = ErrorResponse, description = "Authorisation failure"),
         (status = 500, body = ErrorResponse, description = "Internal server errors")
     )
 )]
 async fn all(
     State(ctx): State<Arc<AppState>>,
-    Extension(auth): Extension<TokenClaims>,
+    Extension(auth): Extension<AuthClaims>,
 ) -> Result<Response> {
-    let tasks = Task::find_all(&ctx.db, Uuid::parse_str(&auth.sub).unwrap())
+    let tasks = Task::find_all(&ctx.db, auth.pid())
         .await?
         .into_iter()
         .map(TaskResponse::from)
@@ -92,7 +92,8 @@ async fn all(
     security(("token" = [])),
     responses(
         (status = 200, body = TaskResponse, description = "Successful task retrieval"),
-        (status = 401, body = ErrorResponse, description = "Invalid authorisation token"),
+        (status = 401, body = ErrorResponse, description = "Authentication failure"),
+        (status = 403, body = ErrorResponse, description = "Authorisation failure"),
         (status = 500, body = ErrorResponse, description = "Internal server errors")
     )
 )]
@@ -119,7 +120,8 @@ async fn one(
     security(("token" = [])),
     responses(
         (status = 204, description = "Successful task deletion"),
-        (status = 401, body = ErrorResponse, description = "Invalid authorisation token"),
+        (status = 401, body = ErrorResponse, description = "Authentication failure"),
+        (status = 403, body = ErrorResponse, description = "Authorisation failure"),
         (status = 500, body = ErrorResponse, description = "Internal server errors")
     )
 )]
@@ -146,7 +148,8 @@ async fn remove(
     security(("token" = [])),
     responses(
         (status = 201, body= TaskResponse , description = "Successful task update"),
-        (status = 401, body = ErrorResponse, description = "Invalid authorisation token"),
+        (status = 401, body = ErrorResponse, description = "Authentication failure"),
+        (status = 403, body = ErrorResponse, description = "Authorisation failure"),
         (status = 500, body = ErrorResponse, description = "Internal server errors")
     )
 )]

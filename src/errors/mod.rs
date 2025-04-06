@@ -10,6 +10,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     #[error(transparent)]
     Axum(#[from] axum::Error),
+    #[error(transparent)]
+    AxumHttp(#[from] axum::http::Error),
     #[error("{0}")]
     ColorEyre(#[from] color_eyre::Report),
     #[error(transparent)]

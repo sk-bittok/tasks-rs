@@ -1,4 +1,4 @@
-use chrono::{DateTime, FixedOffset, Timelike, Utc};
+use chrono::{DateTime, FixedOffset, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::{Decode, Executor, PgPool, Postgres, postgres::PgQueryResult, prelude::FromRow};
 use uuid::Uuid;
