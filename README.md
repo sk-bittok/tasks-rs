@@ -30,8 +30,14 @@ Screenshots of the application running on Scalar, Swagger-UI, Redoc and Rapidoc 
 
 ## Screenshots
 
-### Swagger-UI One
+### Swagger-UI
 ![Auth Endpoints](./assets/swagger-ui-1.png)
+
+### Scalar
+![Register Endpoint](./assets/scalar-register-user.png)
+
+### Scalar 2
+![Login Endpoint](./assets/scalar-login.png)
 
 ## Project Structure
 
