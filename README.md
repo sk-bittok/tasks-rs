@@ -40,10 +40,10 @@ Screenshots of the application running on Scalar, Swagger-UI, Redoc and Rapidoc 
 ![Login Endpoint](./assets/scalar-login.png)
 
 ### Redoc
-![List of tasks](./assets/redoc3.png)
+![List of tasks](./assets/redoc-3.png)
 
 ### Rapidoc
-![Delete a task](./assets/rapidoc3.png)
+![Delete a task](./assets/rapidoc-3.png)
 
 
 ## Project Structure
