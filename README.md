@@ -28,6 +28,11 @@ Screenshots of the application running on Scalar, Swagger-UI, Redoc and Rapidoc 
 - **PostgreSQL** - Database (planned)
 - **JWT** - Authentication and authorization (planned)
 
+## Screenshots
+
+### Swagger-UI One
+![Auth Endpoints](./assets/swagger-ui-1.png)
+
 ## Project Structure
 
 ```
